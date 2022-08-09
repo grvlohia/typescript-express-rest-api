@@ -1,70 +1,61 @@
-import { CreateUserDto, PatchUserDto, PutUserDto } from '../dto';
 import shortid from 'shortid';
 import debug from 'debug';
+import { CreateUserDto, PatchUserDto, PutUserDto } from '../dto';
+import mongooseService from '../../common/services/mongoose.service';
 
 const log = debug('app:in-memory-dao');
 
 class UsersDao {
-  users: Array<CreateUserDto> = [];
+  Schema = mongooseService.getMongoose().Schema;
+  userSchema = new this.Schema({
+    email: String,
+    password: { type: String, select: false },
+    firstName: String,
+    lastName: String,
+    permissionFlags: Number,
+  });
+  User = mongooseService.getMongoose().model('Users', this.userSchema);
 
   constructor() {
     log('Created new instance of UsersDao');
   }
 
-  async addUser(user: CreateUserDto) {
-    user.id = shortid.generate();
-    this.users.push(user);
-    return user.id;
+  async addUser(userFields: CreateUserDto) {
+    const user = new this.User({
+      ...userFields,
+      permissionFlags: 1,
+    });
+    await user.save();
+    return user._id;
   }
 
-  async getUsers() {
-    return this.users;
+  async getUsers(limit = 25, page = 0) {
+    return this.User.find()
+      .limit(limit)
+      .skip(limit * page)
+      .exec();
   }
 
   async getUserById(userId: string) {
-    return this.users.find((user: { id: string }) => user.id === userId);
-  }
-
-  async putUserById(userId: string, user: PutUserDto) {
-    const objIndex = this.users.findIndex((user) => user.id === userId);
-    this.users.splice(objIndex, 1, user);
-    return `${user.id} updated via put`;
-  }
-
-  async patchUserById(userId: string, user: PatchUserDto) {
-    const objIndex = this.users.findIndex((user) => user.id === userId);
-    const currentUser = this.users[objIndex];
-    const allowedPatchFields = [
-      'password',
-      'firstName',
-      'lastName',
-      'permissionLevel',
-    ];
-    for (const field of allowedPatchFields) {
-      if (field in user) {
-        // @ts-ignore: have to modify patch fields
-        currentUser[field] = user[field];
-      }
-    }
-    this.users.splice(objIndex, 1, currentUser);
-    return `${user.id} patched`;
-  }
-
-  async removeUserById(userId: string) {
-    const objIndex = this.users.findIndex((user) => user.id === userId);
-
-    this.users.splice(objIndex, 1);
-    return `${userId} removed`;
+    return this.User.findOne({ _id: userId }).exec();
   }
 
   async getUserByEmail(email: string) {
-    const objIndex = this.users.findIndex((user) => user.email === email);
-    const currentUser = this.users[objIndex];
-    if (currentUser) {
-      return currentUser;
-    } else {
-      return null;
-    }
+    return this.User.findOne({ email: email }).exec();
+  }
+
+  async updateUserById(userId: string, userFields: PutUserDto | PatchUserDto) {
+    const existingUser = await this.User.findOneAndUpdate(
+      { _id: userId },
+      { ...userFields },
+      { new: true }
+    ).exec();
+
+    return existingUser;
+  }
+
+  async removeUserById(userId: string) {
+    return this.User.deleteOne({ _id: userId }).exec();
   }
 }
 
