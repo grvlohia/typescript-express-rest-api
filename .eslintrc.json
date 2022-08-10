@@ -35,6 +35,7 @@
             {
                 "ts-ignore": "allow-with-description"
             }
-        ]
+        ],
+        "newline-before-return": "error"
     }
 }

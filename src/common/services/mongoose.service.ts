@@ -24,10 +24,7 @@ class MongooseService {
     log('Attempting MongoDB connection (will retry if needed)');
     log(`Connection String: ${process.env.MONGO_CONNECTION_URI}`);
     mongoose
-      .connect(
-        process.env.MONGO_CONNECTION_URI || '',
-        this.mongooseConnectOptions
-      )
+      .connect(process.env.MONGO_CONNECTION_URI!, this.mongooseConnectOptions)
       .then(() => {
         log('MongoDB is connected');
       })

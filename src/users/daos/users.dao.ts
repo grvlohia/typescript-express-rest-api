@@ -1,4 +1,3 @@
-import shortid from 'shortid';
 import debug from 'debug';
 import { CreateUserDto, PatchUserDto, PutUserDto } from '../dto';
 import mongooseService from '../../common/services/mongoose.service';
@@ -26,6 +25,7 @@ class UsersDao {
       permissionFlags: 1,
     });
     await user.save();
+
     return user._id;
   }
 
@@ -56,6 +56,12 @@ class UsersDao {
 
   async removeUserById(userId: string) {
     return this.User.deleteOne({ _id: userId }).exec();
+  }
+
+  async getUserByEmailWithPassword(email: string) {
+    return this.User.findOne({ email: email })
+      .select('_id email permissionFlags +password')
+      .exec();
   }
 }
 

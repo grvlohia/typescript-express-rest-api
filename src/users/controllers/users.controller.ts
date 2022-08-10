@@ -1,7 +1,7 @@
 import express from 'express';
 import debug from 'debug';
 import argon2 from 'argon2';
-import usersService from '../services/users.services';
+import usersService from '../services/users.service';
 
 const log = debug('app:users-controller');
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import userService from '../services/users.services';
+import userService from '../services/users.service';
 import debug from 'debug';
 
 const log = debug('app:users-controller');
