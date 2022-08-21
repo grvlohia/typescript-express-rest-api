@@ -12,10 +12,15 @@
     "parserOptions": {
         "ecmaVersion": "latest",
         "sourceType": "module",
-        "project": "./tsconfig.json"
+        "project": [
+            "./tsconfig.json",
+            "./tsconfig.eslint.json"
+        ]
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "simple-import-sort",
+        "import"
     ],
     "rules": {
         "prettier/prettier": [
@@ -36,6 +41,39 @@
                 "ts-ignore": "allow-with-description"
             }
         ],
-        "newline-before-return": "error"
+        "newline-before-return": "error",
+        "simple-import-sort/imports": [
+            "error",
+            {
+                "groups": [
+                    [
+                        "^@?\\w"
+                    ],
+                    // Internal packages.
+                    [
+                        "^(@|components)(/.*|$)"
+                    ],
+                    // Side effect imports.
+                    [
+                        "^\\u0000"
+                    ],
+                    // Parent imports. Put `..` last.
+                    [
+                        "^\\.\\.(?!/?$)",
+                        "^\\.\\./?$"
+                    ],
+                    // Other relative imports. Put same-folder imports and `.` last.
+                    [
+                        "^\\./(?=.*/)(?!/?$)",
+                        "^\\.(?!/?$)",
+                        "^\\./?$"
+                    ]
+                ]
+            }
+        ],
+        "simple-import-sort/exports": "error",
+        "import/first": "error",
+        "import/newline-after-import": "error",
+        "import/no-duplicates": "error"
     }
 }

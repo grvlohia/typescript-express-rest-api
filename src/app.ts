@@ -1,5 +1,6 @@
-import path from 'path';
+/* eslint-disable import/first */
 import dotenv from 'dotenv';
+import path from 'path';
 
 const dotenvResult = dotenv.config({
   path: path.resolve(__dirname, '../.env'),
@@ -9,16 +10,16 @@ if (dotenvResult.error) {
   throw dotenvResult.error;
 }
 
-import express from 'express';
-import * as http from 'http';
-
-import * as winston from 'winston';
-import * as expressWinston from 'express-winston';
 import cors from 'cors';
+import debug from 'debug';
+import express from 'express';
+import * as expressWinston from 'express-winston';
+import * as http from 'http';
+import * as winston from 'winston';
+
+import { AuthRoutes } from './auth/auth.routes.config';
 import { CommonRoutesConfig } from './common/common.routes.config';
 import { UsersRoutes } from './users/users.routes.config';
-import debug from 'debug';
-import { AuthRoutes } from './auth/auth.routes.config';
 
 const app: express.Application = express();
 const server: http.Server = http.createServer(app);
@@ -45,6 +46,9 @@ const loggerOptions: expressWinston.LoggerOptions = {
 
 if (!process.env.DEBUG) {
   loggerOptions.meta = false; // when not debugging, log requests as one-liners
+  if (typeof global.it === 'function') {
+    loggerOptions.level = 'http'; // for non-debug test tuns, squelch entirely
+  }
 }
 
 // initialize the logger with the above configuration
@@ -61,7 +65,7 @@ app.get('/', (req: express.Request, res: express.Response) => {
   res.status(200).send(runningMessage);
 });
 
-server.listen(port, () => {
+export default server.listen(port, () => {
   routes.forEach((route: CommonRoutesConfig) => {
     debugLog(`Routes configured for ${route.getName()}`);
   });

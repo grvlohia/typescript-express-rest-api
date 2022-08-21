@@ -1,18 +1,25 @@
 import debug from 'debug';
-import { CreateUserDto, PatchUserDto, PutUserDto } from '../dto';
+import shortid from 'shortid';
+
+import { PermissionFlag } from '../../common/middleware/common.permissionflag.enum';
 import mongooseService from '../../common/services/mongoose.service';
+import { CreateUserDto, PatchUserDto, PutUserDto } from '../dto';
 
 const log = debug('app:in-memory-dao');
 
 class UsersDao {
   Schema = mongooseService.getMongoose().Schema;
-  userSchema = new this.Schema({
-    email: String,
-    password: { type: String, select: false },
-    firstName: String,
-    lastName: String,
-    permissionFlags: Number,
-  });
+  userSchema = new this.Schema(
+    {
+      _id: String,
+      email: String,
+      password: { type: String, select: false },
+      firstName: String,
+      lastName: String,
+      permissionFlags: Number,
+    },
+    { id: false }
+  );
   User = mongooseService.getMongoose().model('Users', this.userSchema);
 
   constructor() {
@@ -20,9 +27,11 @@ class UsersDao {
   }
 
   async addUser(userFields: CreateUserDto) {
+    const userId = shortid.generate();
     const user = new this.User({
+      _id: userId,
       ...userFields,
-      permissionFlags: 1,
+      permissionFlags: PermissionFlag.FREE_PERMISSION,
     });
     await user.save();
 
@@ -46,9 +55,9 @@ class UsersDao {
 
   async updateUserById(userId: string, userFields: PutUserDto | PatchUserDto) {
     const existingUser = await this.User.findOneAndUpdate(
-      { _id: userId },
-      { ...userFields },
-      { new: true }
+      { _id: userId }, // filter
+      { ...userFields }, // update document
+      { new: true } // options
     ).exec();
 
     return existingUser;

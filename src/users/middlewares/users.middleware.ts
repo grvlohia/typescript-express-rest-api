@@ -1,14 +1,15 @@
-import express from 'express';
-import userService from '../services/users.service';
 import debug from 'debug';
+import { NextFunction, Request, Response } from 'express';
+
+import userService from '../services/users.service';
 
 const log = debug('app:users-controller');
 
 class UsersMiddleware {
   async validateRequiredUserBodyFields(
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
   ) {
     if (req.body && req.body.email && req.body.password) {
       next();
@@ -20,9 +21,9 @@ class UsersMiddleware {
   }
 
   async validateSameEmailDoesntExist(
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
   ) {
     const user = await userService.getUserByEmail(req.body.email);
     if (user) {
@@ -32,13 +33,14 @@ class UsersMiddleware {
     }
   }
 
-  async validateSameEmailBelongToSameUser(
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
+  validateSameEmailBelongToSameUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
   ) {
-    const user = await userService.getUserByEmail(req.body.email);
-    if (user && user.id === req.body.id) {
+    if (typeof req.body.email === 'undefined') {
+      next();
+    } else if (req.body.email && res.locals.user.email === req.body.email) {
       next();
     } else {
       res.status(400).send({ error: `Invalid email` });
@@ -46,9 +48,9 @@ class UsersMiddleware {
   }
 
   validatePatchEmail = async (
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
   ) => {
     if (req.body.email) {
       log('Validating email', req.body.email);
@@ -59,13 +61,10 @@ class UsersMiddleware {
     }
   };
 
-  async validateUserExists(
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) {
+  async validateUserExists(req: Request, res: Response, next: NextFunction) {
     const user = await userService.readById(req.params.userId);
     if (user) {
+      res.locals.user = user;
       next();
     } else {
       res.status(404).send({
@@ -75,13 +74,30 @@ class UsersMiddleware {
   }
 
   async extractUserId(
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
+    req: Request,
+    res: Response,
+    next: NextFunction,
     id: string
   ) {
     req.body.id = id;
     next();
+  }
+
+  async userCantChangePermission(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    if (
+      'permissionFlags' in req.body &&
+      req.body.permissionFlags !== res.locals.user.permissionFlags
+    ) {
+      res.status(400).send({
+        errors: ['User cannot change permission flags'],
+      });
+    } else {
+      next();
+    }
   }
 }
 

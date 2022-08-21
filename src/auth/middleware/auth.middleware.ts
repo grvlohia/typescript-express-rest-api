@@ -1,6 +1,7 @@
-import usersService from '../../users/services/users.service';
 import * as argon2 from 'argon2';
 import { NextFunction, Request, Response } from 'express';
+
+import usersService from '../../users/services/users.service';
 
 class AuthMiddleware {
   async verifyUserPassword(req: Request, res: Response, next: NextFunction) {

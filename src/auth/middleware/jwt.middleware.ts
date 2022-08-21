@@ -1,8 +1,9 @@
-import { NextFunction, Request, Response } from 'express';
 import crypto from 'crypto';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import usersService from '../../users/services/users.service';
+
 import { Jwt } from '../../common/types/jwt';
+import usersService from '../../users/services/users.service';
 
 const jwtSecret = process.env.JWT_SECRET!;
 

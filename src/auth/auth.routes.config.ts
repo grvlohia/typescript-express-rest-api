@@ -1,7 +1,9 @@
 import { Application } from 'express';
 import { body } from 'express-validator';
+
 import { CommonRoutesConfig } from '../common/common.routes.config';
 import bodyValidationMiddleware from '../common/middleware/body.validation.middleware';
+
 import authController from './controllers/auth.controller';
 import authMiddleware from './middleware/auth.middleware';
 import jwtMiddleware from './middleware/jwt.middleware';

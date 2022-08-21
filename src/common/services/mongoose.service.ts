@@ -1,5 +1,5 @@
-import mongoose, { ConnectOptions } from 'mongoose';
 import debug from 'debug';
+import mongoose, { ConnectOptions } from 'mongoose';
 
 const log = debug('app:mongoose-service');
 
