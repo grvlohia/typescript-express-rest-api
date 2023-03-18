@@ -28,8 +28,8 @@ export class UsersRoutes extends CommonRoutesConfig {
       .post([
         body('email').isEmail(),
         body('password')
-          .isLength({ min: 8 })
-          .withMessage(`Must include password (8+ characters)`),
+          .isLength({ min: 9 })
+          .withMessage(`Must include password (9+ characters)`),
         bodyValidationMiddleware.verifyBodyFieldsErrors,
         UsersMiddleware.validateSameEmailDoesntExist,
         UsersController.createUser,

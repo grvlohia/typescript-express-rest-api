@@ -19,6 +19,9 @@ import * as winston from 'winston';
 
 import { AuthRoutes } from './auth/auth.routes.config';
 import { CommonRoutesConfig } from './common/common.routes.config';
+import { openapiValidatorMiddleware } from './common/middleware/openapi.validator.middleware';
+import { configureSwagger } from './config/configSwaggerUi';
+import { errorHandler } from './config/errorHandler';
 import { UsersRoutes } from './users/users.routes.config';
 
 const app: express.Application = express();
@@ -32,6 +35,10 @@ app.use(express.json());
 
 // here we are adding middleware to allow cross-origin requests
 app.use(cors());
+
+// adding swagger and openapi-validator
+configureSwagger(app);
+app.use(openapiValidatorMiddleware);
 
 // here we are preparing the expressWinston logging middleware configuration,
 // which will automatically log all HTTP requests handled by Express.js
@@ -54,9 +61,7 @@ if (!process.env.DEBUG) {
 // initialize the logger with the above configuration
 app.use(expressWinston.logger(loggerOptions));
 
-//Note that we have to define our routes after we set up expressWinston.logger.
-// here we are adding the UserRoutes to our array,
-// after sending the Express.js application object to have the routes added to our app!
+// adding routes to app
 routes.push(new UsersRoutes(app));
 routes.push(new AuthRoutes(app));
 
@@ -65,11 +70,11 @@ app.get('/', (req: express.Request, res: express.Response) => {
   res.status(200).send(runningMessage);
 });
 
+app.use(errorHandler);
+
 export default server.listen(port, () => {
   routes.forEach((route: CommonRoutesConfig) => {
     debugLog(`Routes configured for ${route.getName()}`);
   });
-  // our only exception to avoiding console.log(), because we
-  // always want to know when the server is done starting up
   console.log(runningMessage);
 });

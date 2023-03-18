@@ -23,7 +23,7 @@ export class AuthRoutes extends CommonRoutesConfig {
     ]);
 
     // TODO: invalidate previous refresh token and limit how ofter new ones can be requested
-    this.app.post('/auth/refresh-token', [
+    this.app.post('/auth/refresh', [
       jwtMiddleware.validJWTNeeded,
       jwtMiddleware.verifyRefreshBodyField,
       jwtMiddleware.validRefreshNeeded,

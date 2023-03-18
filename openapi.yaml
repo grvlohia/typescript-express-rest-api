@@ -1,0 +1,210 @@
+openapi: 3.0.0
+info:
+  title: Todo Service
+  description: This is a description for the API. We can use [markdown](http://commonmark.org/help/) or HTML here.
+  version: 0.0.1
+servers:
+  - url: http://localhost:3000/
+    description: Dev Server
+  - url: http://staging-api.example.com
+    description: Internal staging server for testing
+tags:
+  - name: auth
+    description: Authentication
+  - name: user
+    description: Operations related to user
+paths:
+  /auth:
+    post:
+      tags:
+        - auth
+      summary: route to get access token.
+      description: Route to login using email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+              required:
+                - email
+                - password
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+  /auth/refresh:
+    post:
+      tags:
+        - auth
+      security:
+        - bearerAuth: []
+      summary: route to refresh access token
+      description: Route to refresh an access token using a refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+              required:
+                - refreshToken
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad Request
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '501':
+          description: Internal Server Error
+  /users:
+    post:
+      tags:
+        - user
+      summary: Creates a new User
+      description: Creates a new User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                permissionFlags:
+                  type: integer
+                  format: int32
+              required:
+                - email
+                - password
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+    get:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      summary: Retrieve all users (Requires admin permissions)
+      description: Get all users
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserSchema'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /users/{userId}:
+    get:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userid
+          schema:
+            type: string
+          required: true
+          description: unique user id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSchema'
+        '403':
+          description: Unauthorized
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+components:
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: The access token.
+        refreshToken:
+          type: string
+          description: The refresh token.
+    UserSchema:
+      type: object
+      properties:
+        _id:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        permissionFlags:
+          type: integer
+          format: int32
+      required:
+        - _id
+        - email
+        - permissionFlags
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid

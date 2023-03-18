@@ -1,0 +1,4 @@
+- Implement refresh-token rotation
+- Invalidate JWT tokens when a new one is generated
+- implement rate limiting
+- Implement functionality to remove fields in body which are not present in the DTOs
